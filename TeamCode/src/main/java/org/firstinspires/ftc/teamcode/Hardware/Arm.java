@@ -17,7 +17,7 @@ public class Arm {
     public double slidesPower = 1.0, tiltPower = 1.0;
     public int slideStep = 300, tiltStep;
     public int extendPos = 7450, retractPos = 0, slightlyExtendedPos = 346, intakeExtendPos = 2200, horizontalExtensionLimit = 3450;
-    public int lockedTiltPos = 0, outtakeTiltPos = -260, intakeTiltPos = 407;
+    public int lockedTiltPos = 0, outtakeTiltPos = -225, intakeTiltPos = 400;
 
     //SERVOS
     public Servo lockingServo, pivotServo, clawServo;
@@ -67,7 +67,7 @@ public class Arm {
         //MUST LET OUT SOME STRING AFTER STARTING SINCE THE HOLD POSITION WILL BREAK STRING
         //IF IT TRIES TO HOLD THE FULL RETRACTED UPRIGHT POSITION WHEN GOING DOWN (SINCE SOME STRING
         //NEEDS TO SPOOL OUT WHEN GOING DOWN
-
+        telemetry.addData("tiltpos", tiltMotor.getCurrentPosition());
         telemetry.addData("REQ_EXTEND", reqExtendState);
         telemetry.addData("REQ_TILT", reqTiltState);
         telemetry.addData("curr_extend", currExtendState);
