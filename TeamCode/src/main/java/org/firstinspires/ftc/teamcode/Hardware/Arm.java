@@ -17,11 +17,11 @@ public class Arm {
     public double slidesPower = 1.0, tiltPower = 1.0;
     public int slideStep = 300, tiltStep;
     public int extendPos = 7450, retractPos = 0, slightlyExtendedPos = 346, intakeExtendPos = 2200, horizontalExtensionLimit = 3450;
-    public int lockedTiltPos = 0, outtakeTiltPos = -225, intakeTiltPos = 400;
+    public int lockedTiltPos = 0, outtakeTiltPos = -270, intakeTiltPos = 407;
 
     //SERVOS
     public Servo lockingServo, pivotServo, clawServo;
-    public double pivotInit = 0.15, pivotIntake = 0.5, pivotOuttake = 0.85, clawIntake = 0.35, clawOuttake = 0.0;
+    public double pivotInit = 0.15, pivotIntake = 0.5, pivotOuttake = 0.85, clawIntake = 0.4, clawOuttake = 0.0;
     public double open = 0.1, hold = 0.25;
 
     //STATES
@@ -60,6 +60,9 @@ public class Arm {
         pivotServo.setPosition(pivotInit);
         clawServo.setPosition(clawIntake);
         lockingServo.setPosition(hold);
+
+        telemetry.addData("tiltPos", tiltMotor.getCurrentPosition());
+        telemetry.update();
     }
 
     public void actuateArm() {

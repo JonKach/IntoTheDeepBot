@@ -1,27 +1,46 @@
 package org.firstinspires.ftc.teamcode.Hardware;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.Teleop.Teleop;
 
+@Config
 public class Chassis {
     public DcMotor frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor;
 //    public DcMotorEx leftOdo, strafeOdo, rightOdo;
 
     Gamepad gamepad1;
     static IMU imu; //A static IMU object that shares heading between TeleOp and Auton
-    double headingOffset = 0; //stores the heading the robot started the opmode with (corrects for error)
+    double headingOffset = 90; //stores the heading the robot started the opmode with (corrects for error)
     double driveSpeed = 1.0;
 
     Telemetry telemetry;
+
+    //TURN PID
+    double integralSum_turn = 0;
+    public static double kP_turn = 0.019;
+    public static double kI_turn = 0.000001;
+    public static double kD_turn = 0;
+
+    ElapsedTime timer_turn = new ElapsedTime();
+    double lastError_turn = 0;
+
+    //DRIVE PID
+    double integralSum_drive = 0;
+    public static double kP_drive = 0.0005;
+    public static double kI_drive = 0.00029;
+    public static double kD_drive;
+
+    ElapsedTime timer_drive = new ElapsedTime();
+    double lastError_drive = 0;
 
     //Teleop Constructor
     public Chassis(HardwareMap hardwareMap, Gamepad gamepad1, Telemetry telemetry){
@@ -32,9 +51,15 @@ public class Chassis {
         frontRightMotor = hardwareMap.get(DcMotor.class, "FRM");
         backRightMotor = hardwareMap.get(DcMotor.class, "BRM");
 
-//        leftOdo = hardwareMap.get(DcMotorEx.class, "BLM"); //odo encoders are on motor ports CHECK
-//        rightOdo = hardwareMap.get(DcMotorEx.class, "BRM");
-//        strafeOdo = hardwareMap.get(DcMotorEx.class, "FRM");
+        frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -52,7 +77,6 @@ public class Chassis {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         this.telemetry = telemetry;
-        headingOffset = 180;
     }
 
     public void fieldCentricDrive(){
@@ -61,7 +85,7 @@ public class Chassis {
         double rx = gamepad1.right_stick_x;
 
         if(gamepad1.right_stick_button) { //resets field-centric drive heading (offset = current heading)
-            headingOffset = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) + 180;
+            headingOffset = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
         }
 
         double botHeading = Math.toRadians(-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) - headingOffset);
@@ -77,14 +101,14 @@ public class Chassis {
         double frontRightPower = (rotY - rotX - rx) / denominator;
         double backRightPower = (rotY + rotX - rx) / denominator;
 
-        telemetry.addData("denominator", denominator);
-        telemetry.addData("rotY", rotY);
-        telemetry.addData("rotX", rotX);
-        telemetry.addData("rx", rx);
-        telemetry.addData("frontLeft", frontLeftPower);
-        telemetry.addData("backLeft", backLeftPower);
-        telemetry.addData("frontRight", frontRightPower);
-        telemetry.addData("backRight", backRightPower);
+//        telemetry.addData("denominator", denominator);
+//        telemetry.addData("rotY", rotY);
+//        telemetry.addData("rotX", rotX);
+//        telemetry.addData("rx", rx);
+//        telemetry.addData("frontLeft", frontLeftPower);
+//        telemetry.addData("backLeft", backLeftPower);
+//        telemetry.addData("frontRight", frontRightPower);
+//        telemetry.addData("backRight", backRightPower);
 
         if(gamepad1.right_bumper) //slow down button for fine-control
             driveSpeed = 0.3;
@@ -97,16 +121,59 @@ public class Chassis {
         backRightMotor.setPower(backRightPower * driveSpeed);
     }
 
-    public void odoTelemetry(Telemetry telemetry){
-//        telemetry.addData("leftOdo", leftOdo.getCurrentPosition());
-//        telemetry.addData("rightOdo", rightOdo.getCurrentPosition());
-//        telemetry.addData("strafeOdo", strafeOdo.getCurrentPosition());
-
-        telemetry.addData("FRM", frontRightMotor.getPower());
-
+    public void imuTelemetry(Telemetry telemetry) {
+        telemetry.addData("imuHeading", -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+        telemetry.addData("botHeading", -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) - headingOffset);
+        telemetry.addData("currDriveTicks", (frontLeftMotor.getCurrentPosition() + frontRightMotor.getCurrentPosition() + backLeftMotor.getCurrentPosition() + backRightMotor.getCurrentPosition()) / 4);
     }
 
-    public void imuTelemetry(Telemetry telemetry) {
-        telemetry.addData("imuHeading", -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) - headingOffset);
+    public void autoTurn(double angleToTurnTo) {
+        turnPID(angleToTurnTo, -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) - headingOffset);
+    }
+
+    public void autoDrive(double ticksToDriveTo) {
+        int avgCurrTicks = (frontLeftMotor.getCurrentPosition() + frontRightMotor.getCurrentPosition() + backLeftMotor.getCurrentPosition() + backRightMotor.getCurrentPosition()) / 4;
+        telemetry.addData("currTicks", avgCurrTicks);
+        drivePID(ticksToDriveTo, avgCurrTicks);
+    }
+
+    public void turnPID(double ref, double state) {
+        double error = angleWrap(ref-state);
+        integralSum_turn += error * timer_turn.seconds();
+        double derivative = (error - lastError_turn) / timer_turn.seconds();
+        lastError_turn = error;
+
+        timer_turn.reset();
+
+        double power = (error * kP_turn) + (derivative * kD_turn) + (integralSum_turn * kI_turn);
+        frontLeftMotor.setPower(power);
+        backLeftMotor.setPower(power);
+        frontRightMotor.setPower(-power);
+        backRightMotor.setPower(-power);
+    }
+
+    private double angleWrap(double degrees) {
+        while(degrees > 180) {
+            degrees -= 360;
+        }
+        while(degrees < -180) {
+            degrees += 360;
+        }
+        return degrees;
+    }
+
+    public void drivePID(double ref, double state) {
+        double error = ref-state;
+        integralSum_drive += error * timer_drive.seconds();
+        double derivative = (error - lastError_drive) / timer_drive.seconds();
+        lastError_drive = error;
+
+        timer_drive.reset();
+
+        double power = (error * kP_drive) + (derivative * kD_drive) + (integralSum_drive * kI_drive);
+        frontLeftMotor.setPower(power);
+        backLeftMotor.setPower(power);
+        frontRightMotor.setPower(power);
+        backRightMotor.setPower(power);
     }
 }

@@ -16,5 +16,6 @@ public class Teleop extends OpMode {
     public void loop() {
         robot.chassis.fieldCentricDrive();
         robot.arm.actuateArm();
+        robot.chassis.imuTelemetry(telemetry);
     }
 }
