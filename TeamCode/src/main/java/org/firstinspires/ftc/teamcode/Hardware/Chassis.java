@@ -19,7 +19,7 @@ public class Chassis {
 
     Gamepad gamepad1;
     static IMU imu; //A static IMU object that shares heading between TeleOp and Auton
-    double headingOffset = 90; //stores the heading the robot started the opmode with (corrects for error)
+    double headingOffset = 90; //OPPOSITE //stores the heading the robot started the opmode with (corrects for error)
     double driveSpeed = 1.0;
 
     Telemetry telemetry;
@@ -38,6 +38,9 @@ public class Chassis {
     public static double kP_drive = 0.0005;
     public static double kI_drive = 0.00029;
     public static double kD_drive;
+
+    public final double driveTicksPerIn = 47; //CHANGE IF NEEDED
+    public int avgCurrDriveTicks = 0;
 
     ElapsedTime timer_drive = new ElapsedTime();
     double lastError_drive = 0;
@@ -132,9 +135,9 @@ public class Chassis {
     }
 
     public void autoDrive(double ticksToDriveTo) {
-        int avgCurrTicks = (frontLeftMotor.getCurrentPosition() + frontRightMotor.getCurrentPosition() + backLeftMotor.getCurrentPosition() + backRightMotor.getCurrentPosition()) / 4;
-        telemetry.addData("currTicks", avgCurrTicks);
-        drivePID(ticksToDriveTo, avgCurrTicks);
+        avgCurrDriveTicks = (frontLeftMotor.getCurrentPosition() + frontRightMotor.getCurrentPosition() + backLeftMotor.getCurrentPosition() + backRightMotor.getCurrentPosition()) / 4;
+        telemetry.addData("currTicks", avgCurrDriveTicks);
+        drivePID(ticksToDriveTo, avgCurrDriveTicks);
     }
 
     public void turnPID(double ref, double state) {

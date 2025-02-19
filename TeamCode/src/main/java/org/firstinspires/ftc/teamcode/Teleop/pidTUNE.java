@@ -14,7 +14,7 @@ public class pidTUNE extends OpMode {
     public static int driveInches = 0;
     public int overallticks = 0;
     public static boolean updateDrive = true;
-    public static double ticksPerIn = 40.39;
+    public static double ticksPerIn = 40.39; //47
     @Override
     public void init() {
         robot = new InfernBot(hardwareMap, gamepad1, gamepad2, telemetry);
@@ -29,7 +29,7 @@ public class pidTUNE extends OpMode {
         } else {
             robot.chassis.autoDrive(overallticks);
         }
-        robot.arm.actuateArm();
+        robot.arm.actuateArm(true);
         robot.chassis.imuTelemetry(telemetry);
     }
 }

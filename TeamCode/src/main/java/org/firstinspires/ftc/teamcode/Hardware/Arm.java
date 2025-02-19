@@ -65,7 +65,7 @@ public class Arm {
         telemetry.update();
     }
 
-    public void actuateArm() {
+    public void actuateArm(boolean isAuton) {
 
         //MUST LET OUT SOME STRING AFTER STARTING SINCE THE HOLD POSITION WILL BREAK STRING
         //IF IT TRIES TO HOLD THE FULL RETRACTED UPRIGHT POSITION WHEN GOING DOWN (SINCE SOME STRING
@@ -77,28 +77,29 @@ public class Arm {
         telemetry.addData("curr_tilt", currTiltState);
 
         //MANUAL
-        if(gamepad2.left_trigger > 0.3 && slidesMotor.getCurrentPosition() - slideStep >= slightlyExtendedPos) {
-            isManual = true;
-            slidesMotor.setTargetPosition(slidesMotor.getCurrentPosition() - slideStep);
-            slidesMotor.setPower(slidesPower);
-        } else if(gamepad2.right_trigger > 0.3) {
-            if(!(currTiltState == TiltState.INTAKE && slidesMotor.getCurrentPosition() + slideStep > horizontalExtensionLimit)) {
+        if(!isAuton) {
+            if (gamepad2.left_trigger > 0.3 && slidesMotor.getCurrentPosition() - slideStep >= slightlyExtendedPos) {
                 isManual = true;
-                slidesMotor.setTargetPosition(slidesMotor.getCurrentPosition() + slideStep);
+                slidesMotor.setTargetPosition(slidesMotor.getCurrentPosition() - slideStep);
                 slidesMotor.setPower(slidesPower);
+            } else if (gamepad2.right_trigger > 0.3) {
+                if (!(currTiltState == TiltState.INTAKE && slidesMotor.getCurrentPosition() + slideStep > horizontalExtensionLimit)) {
+                    isManual = true;
+                    slidesMotor.setTargetPosition(slidesMotor.getCurrentPosition() + slideStep);
+                    slidesMotor.setPower(slidesPower);
+                }
             }
-        }
 
-        if(gamepad2.dpad_down) {
-            pivotServo.setPosition(pivotIntake);
-        } else if(gamepad2.dpad_up) {
-            pivotServo.setPosition(pivotOuttake);
-        }
-        if(gamepad2.left_bumper) {
-            clawServo.setPosition(clawOuttake);
-        } else if(gamepad2.right_bumper){
-            clawServo.setPosition(clawIntake);
-        }
+            if (gamepad2.dpad_down) {
+                pivotServo.setPosition(pivotIntake);
+            } else if (gamepad2.dpad_up) {
+                pivotServo.setPosition(pivotOuttake);
+            }
+            if (gamepad2.left_bumper) {
+                clawServo.setPosition(clawOuttake);
+            } else if (gamepad2.right_bumper) {
+                clawServo.setPosition(clawIntake);
+            }
 
 //        if(gamepad2.left_stick_x > -0.2) {
 //            tiltMotor.setTargetPosition(tiltMotor.getCurrentPosition() - tiltStep);
@@ -107,51 +108,49 @@ public class Arm {
 //            tiltMotor.setTargetPosition(tiltMotor.getCurrentPosition() + tiltStep);
 //            tiltMotor.setPower(tiltPower);
 //        }
-        //REQUEST
-        if(gamepad2.y) {
-            isManual = false;
-            if(currTiltState == TiltState.INTAKE) {
-                reqExtendState = ExtendState.INTAKE_EXTENDED;
-            } else if(currTiltState == TiltState.OUTTAKE) {
-                reqExtendState = ExtendState.EXTENDED;
+            //REQUEST
+            if (gamepad2.y) {
+                isManual = false;
+                if (currTiltState == TiltState.INTAKE) {
+                    reqExtendState = ExtendState.INTAKE_EXTENDED;
+                } else if (currTiltState == TiltState.OUTTAKE) {
+                    reqExtendState = ExtendState.EXTENDED;
+                }
+            } else if (gamepad2.a) {
+                isManual = false;
+                reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
+            } else if (gamepad2.x) {
+                isManual = false;
+                reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
+                reqTiltState = TiltState.INTAKE;
+            } else if (gamepad2.b) {
+                isManual = false;
+                reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
+                reqTiltState = TiltState.OUTTAKE;
             }
-        }
-        else if(gamepad2.a) {
-            isManual = false;
-            reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
-        }
-        else if(gamepad2.x) {
-            isManual = false;
-            reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
-            reqTiltState = TiltState.INTAKE;
-        }
-        else if(gamepad2.b) {
-            isManual = false;
-            reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
-            reqTiltState = TiltState.OUTTAKE;
         }
         //ACTUATE
         if(!isManual) {
-        if(reqExtendState == ExtendState.EXTENDED && currTiltState == TiltState.OUTTAKE) {
-            slidesMotor.setTargetPosition(extendPos);
-            slidesMotor.setPower(slidesPower);
-            pivotServo.setPosition(pivotOuttake);
-        } else if(reqExtendState == ExtendState.INTAKE_EXTENDED && currTiltState == TiltState.INTAKE) {
-            slidesMotor.setTargetPosition(intakeExtendPos);
-            slidesMotor.setPower(slidesPower);
-        } else if(reqExtendState == ExtendState.SLIGHTLY_EXTENDED) {
-            slidesMotor.setTargetPosition(slightlyExtendedPos);
-            slidesMotor.setPower(slidesPower);
-        }
+            if(reqExtendState == ExtendState.EXTENDED && currTiltState == TiltState.OUTTAKE) {
+                slidesMotor.setTargetPosition(extendPos);
+                slidesMotor.setPower(slidesPower);
+                pivotServo.setPosition(pivotOuttake);
+            } else if(reqExtendState == ExtendState.INTAKE_EXTENDED && currTiltState == TiltState.INTAKE) {
+                slidesMotor.setTargetPosition(intakeExtendPos);
+                slidesMotor.setPower(slidesPower);
+            } else if(reqExtendState == ExtendState.SLIGHTLY_EXTENDED) {
+                slidesMotor.setTargetPosition(slightlyExtendedPos);
+                slidesMotor.setPower(slidesPower);
+            }
 
-        if(reqTiltState == TiltState.INTAKE && currExtendState == ExtendState.SLIGHTLY_EXTENDED) {
-            tiltMotor.setTargetPosition(intakeTiltPos);
-            tiltMotor.setVelocity(90, AngleUnit.DEGREES);
-        } else if(reqTiltState == TiltState.OUTTAKE && currExtendState == ExtendState.SLIGHTLY_EXTENDED) {
-            tiltMotor.setTargetPosition(outtakeTiltPos);
-            tiltMotor.setPower(tiltPower);
-            pivotServo.setPosition(pivotOuttake);
-        }
+            if(reqTiltState == TiltState.INTAKE && currExtendState == ExtendState.SLIGHTLY_EXTENDED) {
+                tiltMotor.setTargetPosition(intakeTiltPos);
+                tiltMotor.setVelocity(90, AngleUnit.DEGREES);
+            } else if(reqTiltState == TiltState.OUTTAKE && currExtendState == ExtendState.SLIGHTLY_EXTENDED) {
+                tiltMotor.setTargetPosition(outtakeTiltPos);
+                tiltMotor.setPower(tiltPower);
+                pivotServo.setPosition(pivotOuttake);
+            }
         }
         //UPDATE
         if(tiltMotor.getCurrentPosition() > intakeTiltPos - 50) {
