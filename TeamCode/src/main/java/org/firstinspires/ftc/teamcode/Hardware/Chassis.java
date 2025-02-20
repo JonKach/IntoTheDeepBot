@@ -18,8 +18,8 @@ public class Chassis {
 //    public DcMotorEx leftOdo, strafeOdo, rightOdo;
 
     Gamepad gamepad1;
-    static IMU imu; //A static IMU object that shares heading between TeleOp and Auton
-    double headingOffset = 90; //OPPOSITE //stores the heading the robot started the opmode with (corrects for error)
+    public static IMU imu; //A static IMU object that shares heading between TeleOp and Auton
+    public double headingOffset = 180; //OPPOSITE //stores the heading the robot started the opmode with (corrects for error)
     double driveSpeed = 1.0;
 
     Telemetry telemetry;
@@ -35,11 +35,11 @@ public class Chassis {
 
     //DRIVE PID
     double integralSum_drive = 0;
-    public static double kP_drive = 0.0005;
-    public static double kI_drive = 0.00029;
+    public static double kP_drive = 0.001;
+    public static double kI_drive = 0.0004;
     public static double kD_drive;
 
-    public final double driveTicksPerIn = 47; //CHANGE IF NEEDED
+    public static double driveTicksPerIn = 44.5; //CHANGE IF NEEDED
     public int avgCurrDriveTicks = 0;
 
     ElapsedTime timer_drive = new ElapsedTime();
@@ -168,15 +168,34 @@ public class Chassis {
     public void drivePID(double ref, double state) {
         double error = ref-state;
         integralSum_drive += error * timer_drive.seconds();
+        telemetry.addData("error", error);
+        telemetry.addData("integral sum", integralSum_drive);
         double derivative = (error - lastError_drive) / timer_drive.seconds();
         lastError_drive = error;
 
         timer_drive.reset();
 
+
         double power = (error * kP_drive) + (derivative * kD_drive) + (integralSum_drive * kI_drive);
+        telemetry.addData("pwr", power);
         frontLeftMotor.setPower(power);
         backLeftMotor.setPower(power);
         frontRightMotor.setPower(power);
         backRightMotor.setPower(power);
+    }
+
+    public void stopDrive() {
+        frontLeftMotor.setPower(0.0);
+        backLeftMotor.setPower(0.0);
+        frontRightMotor.setPower(0.0);
+        backRightMotor.setPower(0.0);
+    }
+
+    public void resetDriveTimer() {
+        timer_drive.reset();
+    }
+
+    public void resetTurnTimer() {
+        timer_turn.reset();
     }
 }
