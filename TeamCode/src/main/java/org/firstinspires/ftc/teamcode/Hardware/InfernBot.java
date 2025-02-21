@@ -10,6 +10,7 @@ public class InfernBot {
     public Arm arm;
     public Slides slides;
     public Tilt tilt;
+    public static boolean ranAuto = false;
 
     public InfernBot(HardwareMap hardwareMap, Gamepad gamepad1, Gamepad gamepad2, Telemetry telemetry) {
         this.chassis = new Chassis(hardwareMap, gamepad1, telemetry);

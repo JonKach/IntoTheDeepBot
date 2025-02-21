@@ -16,12 +16,12 @@ public class Arm {
     public DcMotorEx tiltMotor, slidesMotor;
     public double slidesPower = 1.0, tiltPower = 1.0;
     public int slideStep = 300, tiltStep;
-    public int extendPos = 7450, retractPos = 0, slightlyExtendedPos = 346, intakeExtendPos = 2200, horizontalExtensionLimit = 3450;
+    public int extendPos = 7450, retractPos = 0, slightlyExtendedPos = 346, intakeExtendPos = 2300, horizontalExtensionLimit = 3450;
     public int lockedTiltPos = 0, outtakeTiltPos = -270, intakeTiltPos = 407;
 
     //SERVOS
     public Servo lockingServo, pivotServo, clawServo;
-    public double pivotInit = 0.15, pivotIntake = 0.5, pivotOuttake = 0.85, clawIntake = 0.4, clawOuttake = 0.0;
+    public double pivotInit = 0.15, pivotIntake = 0.35, pivotOuttake = 0.85, clawIntake = 0.4, clawOuttake = 0.0;
     public double open = 0.1, hold = 0.25;
 
     //STATES
@@ -49,17 +49,23 @@ public class Arm {
 
         tiltMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        tiltMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        tiltMotor.setTargetPosition(0);
-        tiltMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        if(!InfernBot.ranAuto) {
+            tiltMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            tiltMotor.setTargetPosition(0);
+            tiltMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        slidesMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        slidesMotor.setTargetPosition(0);
-        slidesMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            slidesMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            slidesMotor.setTargetPosition(0);
+            slidesMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        pivotServo.setPosition(pivotInit);
-        clawServo.setPosition(clawIntake);
-        lockingServo.setPosition(hold);
+            pivotServo.setPosition(pivotInit);
+            clawServo.setPosition(clawIntake);
+            lockingServo.setPosition(hold);
+        } else {
+            tiltMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            slidesMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
+
 
         telemetry.addData("tiltPos", tiltMotor.getCurrentPosition());
         telemetry.update();
@@ -148,7 +154,8 @@ public class Arm {
                 tiltMotor.setVelocity(90, AngleUnit.DEGREES);
             } else if(reqTiltState == TiltState.OUTTAKE && currExtendState == ExtendState.SLIGHTLY_EXTENDED) {
                 tiltMotor.setTargetPosition(outtakeTiltPos);
-                tiltMotor.setPower(tiltPower);
+//                tiltMotor.setPower(tiltPower);
+                tiltMotor.setVelocity(100, AngleUnit.DEGREES);
                 pivotServo.setPosition(pivotOuttake);
             }
         }
@@ -169,6 +176,44 @@ public class Arm {
         } else {
             currExtendState = ExtendState.SLIGHTLY_EXTENDED;
         }
+    }
+
+    public void pressX() {
+        reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
+        reqTiltState = TiltState.INTAKE;
+    }
+
+    public void pressY() {
+        if (currTiltState == TiltState.INTAKE) {
+            reqExtendState = ExtendState.INTAKE_EXTENDED;
+        } else if (currTiltState == TiltState.OUTTAKE) {
+            reqExtendState = ExtendState.EXTENDED;
+        }
+    }
+
+    public void pressA() {
+        reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
+    }
+
+    public void pressB() {
+        reqExtendState = ExtendState.SLIGHTLY_EXTENDED;
+        reqTiltState = TiltState.OUTTAKE;
+    }
+
+    public void openClaw() {
+        clawServo.setPosition(clawOuttake);
+    }
+
+    public void closeClaw() {
+        clawServo.setPosition(clawIntake);
+    }
+
+    public void rotateClawDown() {
+        pivotServo.setPosition(pivotIntake);
+    }
+
+    public void rotateClawUp() {
+        pivotServo.setPosition(pivotOuttake);
     }
 
     public enum TiltState {

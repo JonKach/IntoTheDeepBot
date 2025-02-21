@@ -72,13 +72,18 @@ public class Chassis {
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        telemetry.addLine("chassis init");
+        telemetry.update();
         //IMU initialization
-        imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-
+        if(!InfernBot.ranAuto) {
+            imu = hardwareMap.get(IMU.class, "imu");
+            RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+            RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
+            RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+            imu.initialize(new IMU.Parameters(orientationOnRobot));
+            telemetry.addLine("imu initalized");
+            telemetry.update();
+        }
         this.telemetry = telemetry;
     }
 

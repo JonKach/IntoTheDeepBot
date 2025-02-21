@@ -12,6 +12,14 @@ public class Teleop extends OpMode {
         robot = new InfernBot(hardwareMap, gamepad1, gamepad2, telemetry);
     }
 
+    public void init_loop() {
+        telemetry.addData("ranAuto", InfernBot.ranAuto);
+        telemetry.update();
+        if(gamepad2.a) {
+            InfernBot.ranAuto = false;
+            robot = new InfernBot(hardwareMap, gamepad1, gamepad2, telemetry);
+        }
+    }
     @Override
     public void loop() {
         robot.chassis.fieldCentricDrive();

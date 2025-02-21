@@ -19,6 +19,7 @@ public class RedLeftAuton extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        InfernBot.ranAuto = false;
         InfernBot robot = new InfernBot(hardwareMap, gamepad1, gamepad2, telemetry);
         int turnAngle = 180; //starting angle
         int overallDriveTicks = 0; //starting drive ticks;
@@ -35,6 +36,7 @@ public class RedLeftAuton extends LinearOpMode {
         boolean inTolerance = false;
 
         waitForStart();
+        InfernBot.ranAuto = true;
         while(opModeIsActive() && !isStopRequested()) {
             robot.arm.actuateArm(true);
             robot.chassis.imuTelemetry(telemetry);
@@ -63,7 +65,7 @@ public class RedLeftAuton extends LinearOpMode {
                         if(!inTolerance) {
                             inTolerance = true;
                             inToleranceTimer.reset();
-                        } else if(inToleranceTimer.time() > 1500) {
+                        } else if(inToleranceTimer.time() > 800) {
                             currState++;
                             inTolerance = false; //resets for next case
                             updateDriveTicks = true; //resets for next case
@@ -87,7 +89,7 @@ public class RedLeftAuton extends LinearOpMode {
                         inToleranceTimer.reset();
                         turnHasStarted = true;
                     }
-                    if(inToleranceTimer.time() > 1500) {
+                    if(inToleranceTimer.time() > 1000) {
                         currState++;
                         inTolerance = false; //resets for next case
                         updateDriveTicks = true; //resets for next case
@@ -114,7 +116,7 @@ public class RedLeftAuton extends LinearOpMode {
                         if(!inTolerance) {
                             inTolerance = true;
                             inToleranceTimer.reset();
-                        } else if(inToleranceTimer.time() > 1500) {
+                        } else if(inToleranceTimer.time() > 800) {
                             currState++;
                             inTolerance = false; //resets for next case
                             updateDriveTicks = true; //resets for next case
@@ -126,6 +128,201 @@ public class RedLeftAuton extends LinearOpMode {
                     }
                     break;
                 case 4:
+                    driving = false;
+                    turning = false;
+                    if(!timerHasBeenReset) {
+                        robot.chassis.stopDrive();
+                        robot.chassis.resetTurnTimer();
+                        robot.chassis.resetDriveTimer();
+                        timerHasBeenReset = true;
+                    }
+                    robot.arm.pressY();
+                    if(robot.arm.slidesMotor.getCurrentPosition() > robot.arm.extendPos - 50) {
+                        robot.arm.openClaw();
+                        if(!inTolerance) {
+                            inTolerance = true;
+                            inToleranceTimer.reset();
+                        } else if(inToleranceTimer.time() > 300) {
+                            currState++;
+                            inTolerance = false; //resets for next case
+                            updateDriveTicks = true; //resets for next case
+                            timerHasBeenReset = false;
+                            turnHasStarted = false;
+                        }
+                    }
+                    break;
+                case 5:
+                    driving = false;
+                    turning = false;
+                    if(!timerHasBeenReset) {
+                        robot.chassis.stopDrive();
+                        robot.chassis.resetTurnTimer();
+                        robot.chassis.resetDriveTimer();
+                        timerHasBeenReset = true;
+                    }
+                    robot.arm.pressX();
+                    if(robot.arm.currTiltState == Arm.TiltState.INTAKE) {
+                        currState++;
+                        inTolerance = false; //resets for next case
+                        updateDriveTicks = true; //resets for next case
+                        timerHasBeenReset = false;
+                        turnHasStarted = false;
+                    }
+                    break;
+                case 6:
+                    driving = false;
+                    if(!timerHasBeenReset) {
+                        robot.chassis.stopDrive();
+                        robot.chassis.resetTurnTimer();
+                        robot.chassis.resetDriveTimer();
+                        timerHasBeenReset = true;
+                    }
+                    turning = true;
+                    turnAngle = -15;
+                    if(!turnHasStarted) {
+                        inToleranceTimer.reset();
+                        turnHasStarted = true;
+                    }
+                    if(inToleranceTimer.time() > 1000) {
+                        currState++;
+                        inTolerance = false; //resets for next case
+                        updateDriveTicks = true; //resets for next case
+                        timerHasBeenReset = false;
+                        turnHasStarted = false;
+                    }
+                    break;
+                case 7:
+                    driving = false;
+                    turning = false;
+                    if(!timerHasBeenReset) {
+                        robot.chassis.stopDrive();
+                        robot.chassis.resetTurnTimer();
+                        robot.chassis.resetDriveTimer();
+                        timerHasBeenReset = true;
+                    }
+                    robot.arm.pressY();
+                    if(robot.arm.slidesMotor.getCurrentPosition() > robot.arm.intakeExtendPos - 50) {
+                        robot.arm.rotateClawDown();
+                        if(!inTolerance) {
+                            inTolerance = true;
+                            inToleranceTimer.reset();
+                        } else if(inToleranceTimer.time() > 500) {
+                            currState++;
+                            inTolerance = false; //resets for next case
+                            updateDriveTicks = true; //resets for next case
+                            timerHasBeenReset = false;
+                            turnHasStarted = false;
+                        }
+                    }
+                    break;
+                case 8:
+                    robot.arm.closeClaw();
+                    if(!turnHasStarted) {
+                        inToleranceTimer.reset();
+                        turnHasStarted = true;
+                    }
+                    if(inToleranceTimer.time() > 300) {
+                        currState++;
+                        inTolerance = false; //resets for next case
+                        updateDriveTicks = true; //resets for next case
+                        timerHasBeenReset = false;
+                        turnHasStarted = false;
+                    }
+                    break;
+                case 9:
+                    robot.arm.rotateClawUp();
+                    if(!turnHasStarted) {
+                        inToleranceTimer.reset();
+                        turnHasStarted = true;
+                    }
+                    if(inToleranceTimer.time() > 300) {
+                        currState++;
+                        inTolerance = false; //resets for next case
+                        updateDriveTicks = true; //resets for next case
+                        timerHasBeenReset = false;
+                        turnHasStarted = false;
+                    }
+                    break;
+                case 10:
+                    driving = false;
+                    turning = false;
+                    if(!timerHasBeenReset) {
+                        robot.chassis.stopDrive();
+                        robot.chassis.resetTurnTimer();
+                        robot.chassis.resetDriveTimer();
+                        timerHasBeenReset = true;
+                    }
+                    robot.arm.pressB();
+                    if(robot.arm.currTiltState == Arm.TiltState.OUTTAKE) {
+                        currState++;
+                        inTolerance = false; //resets for next case
+                        updateDriveTicks = true; //resets for next case
+                        timerHasBeenReset = false;
+                        turnHasStarted = false;
+                    }
+                    break;
+                case 11:
+                    driving = false;
+                    if(!timerHasBeenReset) {
+                        robot.chassis.stopDrive();
+                        robot.chassis.resetTurnTimer();
+                        timerHasBeenReset = true;
+                    }
+                    turning = true;
+                    turnAngle = 45;
+                    if(!turnHasStarted) {
+                        inToleranceTimer.reset();
+                        turnHasStarted = true;
+                    }
+                    if(inToleranceTimer.time() > 1000) {
+                        currState++;
+                        inTolerance = false; //resets for next case
+                        updateDriveTicks = true; //resets for next case
+                        timerHasBeenReset = false;
+                        turnHasStarted = false;
+                    }
+                    break;
+                case 12:
+                    driving = false;
+                    turning = false;
+                    if(!timerHasBeenReset) {
+                        robot.chassis.stopDrive();
+                        robot.chassis.resetTurnTimer();
+                        robot.chassis.resetDriveTimer();
+                        timerHasBeenReset = true;
+                    }
+                    robot.arm.pressY();
+                    if(robot.arm.slidesMotor.getCurrentPosition() > robot.arm.extendPos - 50) {
+                        robot.arm.openClaw();
+                        if(!inTolerance) {
+                            inTolerance = true;
+                            inToleranceTimer.reset();
+                        } else if(inToleranceTimer.time() > 300) {
+                            currState++;
+                            inTolerance = false; //resets for next case
+                            updateDriveTicks = true; //resets for next case
+                            timerHasBeenReset = false;
+                            turnHasStarted = false;
+                        }
+                    }
+                    break;
+                case 13:
+                    driving = false;
+                    turning = false;
+                    if(!timerHasBeenReset) {
+                        robot.chassis.stopDrive();
+                        robot.chassis.resetTurnTimer();
+                        robot.chassis.resetDriveTimer();
+                        timerHasBeenReset = true;
+                    }
+                    robot.arm.pressB();
+                    if(robot.arm.currTiltState == Arm.TiltState.INTAKE) {
+                        currState++;
+                        inTolerance = false; //resets for next case
+                        updateDriveTicks = true; //resets for next case
+                        timerHasBeenReset = false;
+                        turnHasStarted = false;
+                    }
                     break;
             }
         }
