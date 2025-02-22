@@ -77,6 +77,7 @@ public class Arm {
         //IF IT TRIES TO HOLD THE FULL RETRACTED UPRIGHT POSITION WHEN GOING DOWN (SINCE SOME STRING
         //NEEDS TO SPOOL OUT WHEN GOING DOWN
         telemetry.addData("tiltpos", tiltMotor.getCurrentPosition());
+        telemetry.addData("liftpos", slidesMotor.getCurrentPosition());
         telemetry.addData("REQ_EXTEND", reqExtendState);
         telemetry.addData("REQ_TILT", reqTiltState);
         telemetry.addData("curr_extend", currExtendState);
@@ -214,6 +215,15 @@ public class Arm {
 
     public void rotateClawUp() {
         pivotServo.setPosition(pivotOuttake);
+    }
+
+    public void activateManual(boolean activate) {
+        isManual = activate;
+    }
+
+    public void runSlidesToPos(int pos) {
+        slidesMotor.setTargetPosition(pos);
+        slidesMotor.setPower(slidesPower);
     }
 
     public enum TiltState {
