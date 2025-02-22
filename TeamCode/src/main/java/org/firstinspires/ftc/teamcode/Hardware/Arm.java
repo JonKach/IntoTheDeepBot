@@ -16,7 +16,7 @@ public class Arm {
     public DcMotorEx tiltMotor, slidesMotor;
     public double slidesPower = 1.0, tiltPower = 1.0;
     public int slideStep = 300, tiltStep;
-    public int extendPos = 7450, retractPos = 0, slightlyExtendedPos = 346, intakeExtendPos = 2300, horizontalExtensionLimit = 3450;
+    public int extendPos = 7450, retractPos = 0, slightlyExtendedPos = 346, intakeExtendPos = 2500, horizontalExtensionLimit = 3450;
     public int lockedTiltPos = 0, outtakeTiltPos = -270, intakeTiltPos = 407;
 
     //SERVOS
@@ -32,6 +32,7 @@ public class Arm {
     public TiltState reqTiltState = TiltState.OUTTAKE;
 
     public boolean isManual = false;
+    public boolean withoutTiltPID = false;
 
     Gamepad gamepad2;
     Telemetry telemetry;
@@ -66,6 +67,7 @@ public class Arm {
             slidesMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
 
+        withoutTiltPID = false;
 
         telemetry.addData("tiltPos", tiltMotor.getCurrentPosition());
         telemetry.update();
@@ -95,6 +97,18 @@ public class Arm {
                     slidesMotor.setTargetPosition(slidesMotor.getCurrentPosition() + slideStep);
                     slidesMotor.setPower(slidesPower);
                 }
+            } else if(gamepad2.left_stick_x < -0.3) {
+                isManual = true;
+                tiltMotor.setTargetPosition(tiltMotor.getCurrentPosition() - 250);
+//                withoutTiltPID = true;
+//                tiltMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                tiltMotor.setPower(tiltPower);
+            } else if(gamepad2.left_stick_x > 0.3) {
+                isManual = true;
+//                withoutTiltPID = true;
+//                tiltMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                tiltMotor.setTargetPosition(tiltMotor.getCurrentPosition() + 250);
+                tiltMotor.setPower(tiltPower);
             }
 
             if (gamepad2.dpad_down) {
@@ -152,11 +166,12 @@ public class Arm {
 
             if(reqTiltState == TiltState.INTAKE && currExtendState == ExtendState.SLIGHTLY_EXTENDED) {
                 tiltMotor.setTargetPosition(intakeTiltPos);
+//                tiltMotor.setPower(0.8);
                 tiltMotor.setVelocity(90, AngleUnit.DEGREES);
             } else if(reqTiltState == TiltState.OUTTAKE && currExtendState == ExtendState.SLIGHTLY_EXTENDED) {
                 tiltMotor.setTargetPosition(outtakeTiltPos);
+                tiltMotor.setVelocity(120, AngleUnit.DEGREES);
 //                tiltMotor.setPower(tiltPower);
-                tiltMotor.setVelocity(100, AngleUnit.DEGREES);
                 pivotServo.setPosition(pivotOuttake);
             }
         }

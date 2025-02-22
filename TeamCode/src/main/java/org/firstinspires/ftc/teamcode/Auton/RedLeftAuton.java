@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Hardware.InfernBot;
 public class RedLeftAuton extends LinearOpMode {
 
     public static int first_forward = -25;
-    public static int second_move = -20;
+    public static int second_move = -21;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -178,7 +178,7 @@ public class RedLeftAuton extends LinearOpMode {
                         timerHasBeenReset = true;
                     }
                     turning = true;
-                    turnAngle = -15;
+                    turnAngle = -10;
                     if(!turnHasStarted) {
                         inToleranceTimer.reset();
                         turnHasStarted = true;
