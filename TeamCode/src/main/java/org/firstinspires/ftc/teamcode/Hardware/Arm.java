@@ -16,7 +16,7 @@ public class Arm {
     public DcMotorEx tiltMotor, slidesMotor;
     public double slidesPower = 1.0, tiltPower = 1.0;
     public int slideStep = 300, tiltStep;
-    public int extendPos = 7450, retractPos = 0, slightlyExtendedPos = 346, intakeExtendPos = 2500, horizontalExtensionLimit = 3450;
+    public int extendPos = 7450, retractPos = 0, slightlyExtendedPos = 346, intakeExtendPos = 2500, horizontalExtensionLimit = 1800;
     public int lockedTiltPos = 0, outtakeTiltPos = -270, intakeTiltPos = 407;
 
     //SERVOS
